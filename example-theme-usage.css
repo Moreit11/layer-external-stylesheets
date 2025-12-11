@@ -1,0 +1,126 @@
+/**
+ * Example Theme CSS - How to use Layer External Stylesheets
+ *
+ * Add this to your theme's main CSS file (e.g., style.css)
+ */
+
+/*
+ * Step 1: Define layer order
+ * Layers are applied in the order they're declared here.
+ * Later layers override earlier ones, regardless of specificity.
+ */
+@layer plugin-styles, reset, base, components, utilities;
+
+/*
+ * Step 2: Add your theme styles in appropriate layers
+ */
+
+/* Reset layer - for CSS resets */
+@layer reset {
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+}
+
+/* Base layer - for fundamental styles */
+@layer base {
+    body {
+        font-family: system-ui, sans-serif;
+        line-height: 1.5;
+        color: #333;
+    }
+
+    a {
+        color: #0066cc;
+        text-decoration: none;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+}
+
+/* Components layer - for component-specific styles */
+@layer components {
+    /* Override Fluent Forms styles */
+    .fluentform .ff-el-form-control {
+        border: 2px solid #0066cc;
+        border-radius: 4px;
+        padding: 12px;
+    }
+
+    /* Override Contact Form 7 styles */
+    .wpcf7-form input[type="text"],
+    .wpcf7-form input[type="email"],
+    .wpcf7-form textarea {
+        border: 1px solid #ddd;
+        padding: 10px;
+        width: 100%;
+    }
+
+    /* Override WooCommerce buttons */
+    .woocommerce .button {
+        background: #0066cc;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 4px;
+    }
+}
+
+/* Utilities layer - for utility classes that should always win */
+@layer utilities {
+    .text-center {
+        text-align: center !important;
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    .visually-hidden {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border-width: 0 !important;
+    }
+}
+
+/*
+ * Alternative approach: Single theme layer
+ * If you prefer simplicity, you can just use a single theme layer
+ */
+
+/* Simple two-layer approach */
+/*
+@layer plugin-styles, theme;
+
+@layer theme {
+    * All your theme styles here *
+    * They will override all plugin styles *
+}
+*/
+
+/*
+ * Advanced: Nested layers
+ * You can even nest layers for more granular control
+ */
+
+/*
+@layer components {
+    @layer forms {
+        * Form component styles *
+    }
+
+    @layer buttons {
+        * Button component styles *
+    }
+}
+*/

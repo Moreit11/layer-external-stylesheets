@@ -33,6 +33,7 @@ class Layer_External_Stylesheets {
         add_action('init', array($this, 'init'));
         add_action('wp_enqueue_scripts', array($this, 'dequeue_original_styles'), 100);
         add_action('wp_enqueue_scripts', array($this, 'enqueue_layered_styles'), 101);
+        add_action('wp_enqueue_scripts', array($this, 'cache_registered_styles'), 999);
 
         // Admin hooks
         add_action('admin_menu', array($this, 'add_admin_menu'));
@@ -59,20 +60,11 @@ class Layer_External_Stylesheets {
      * Get stylesheets configuration
      */
     private function get_stylesheets_config() {
-        // Get from options or use defaults
+        // Get from options
         $saved_config = get_option('les_stylesheets_config', array());
 
-        // Default configuration
-        $default_config = array(
-            'fluent-form-styles' => array(
-                'handle' => 'fluent-form-styles',
-                'source' => WP_CONTENT_DIR . '/plugins/fluentform/assets/css/fluent-forms-public.css',
-                'enabled' => true
-            )
-        );
-
-        // Merge with saved config
-        return array_merge($default_config, $saved_config);
+        // Return saved config without defaults
+        return $saved_config;
     }
 
     /**
@@ -235,6 +227,58 @@ class Layer_External_Stylesheets {
                 if (is_file($file)) {
                     unlink($file);
                 }
+            }
+        }
+    }
+
+    /**
+     * Cache registered styles from frontend for display in admin
+     */
+    public function cache_registered_styles() {
+        global $wp_styles;
+
+        if (!is_object($wp_styles)) {
+            return;
+        }
+
+        $registered_styles = array();
+
+        foreach ($wp_styles->registered as $handle => $style) {
+            // Get the source URL
+            $src = $style->src;
+
+            // Try to convert URL to file path
+            $src_path = '';
+            if (!empty($src)) {
+                // Handle relative URLs
+                if (strpos($src, '//') === false) {
+                    $src = site_url($src);
+                }
+
+                // Try to convert URL to file path
+                $site_url = site_url();
+                $wp_content_url = content_url();
+
+                if (strpos($src, $wp_content_url) === 0) {
+                    $src_path = WP_CONTENT_DIR . str_replace($wp_content_url, '', strtok($src, '?'));
+                } else if (strpos($src, $site_url) === 0) {
+                    $src_path = ABSPATH . str_replace($site_url, '', strtok($src, '?'));
+                }
+            }
+
+            $registered_styles[$handle] = array(
+                'src' => $src,
+                'src_path' => $src_path,
+                'deps' => $style->deps,
+                'ver' => $style->ver
+            );
+        }
+
+        // Only update if we have styles and it's different from cached version
+        if (!empty($registered_styles)) {
+            $cached = get_option('les_registered_styles_cache', array());
+            if ($cached !== $registered_styles) {
+                update_option('les_registered_styles_cache', $registered_styles, false);
             }
         }
     }

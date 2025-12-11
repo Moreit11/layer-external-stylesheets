@@ -75,7 +75,7 @@ $layer_name = get_option('les_layer_name', 'plugin-styles');
                                        name="stylesheets[<?php echo $index; ?>][source]"
                                        value="<?php echo esc_attr($stylesheet['source']); ?>"
                                        class="large-text"
-                                       placeholder="e.g., <?php echo WP_CONTENT_DIR; ?>/plugins/plugin-name/css/style.css">
+                                       placeholder="e.g., plugins/plugin-name/css/style.css">
                             </td>
                             <td>
                                 <button type="button" class="button remove-stylesheet">Remove</button>
@@ -182,13 +182,14 @@ $layer_name = get_option('les_layer_name', 'plugin-styles');
 
         <h3>2. Locate Source Files</h3>
         <p>Plugin CSS files are typically located in:</p>
-        <code><?php echo WP_CONTENT_DIR; ?>/plugins/plugin-name/assets/css/</code>
+        <code>plugins/plugin-name/assets/css/</code>
 
         <h3>3. Add Configuration</h3>
         <p>Click "Add Stylesheet" and enter:</p>
         <ul>
             <li><strong>Style Handle:</strong> The handle used by <code>wp_enqueue_style()</code></li>
-            <li><strong>Source Path:</strong> Full server path to the CSS file</li>
+            <li><strong>Source Path:</strong> Relative path to the CSS file (e.g., <code>plugins/plugin-name/css/style.css</code>)</li>
+            <li>Paths are relative to wp-content/ for better security</li>
             <li>Check "Enabled" to activate the layering</li>
         </ul>
 
@@ -246,7 +247,7 @@ jQuery(document).ready(function($) {
         var newRow = '<tr>' +
             '<td><input type="checkbox" name="stylesheets[' + stylesheetIndex + '][enabled]" value="1" checked></td>' +
             '<td><input type="text" name="stylesheets[' + stylesheetIndex + '][handle]" class="regular-text" placeholder="e.g., contact-form-7"></td>' +
-            '<td><input type="text" name="stylesheets[' + stylesheetIndex + '][source]" class="large-text" placeholder="<?php echo WP_CONTENT_DIR; ?>/plugins/plugin-name/css/style.css"></td>' +
+            '<td><input type="text" name="stylesheets[' + stylesheetIndex + '][source]" class="large-text" placeholder="e.g., plugins/plugin-name/css/style.css"></td>' +
             '<td><button type="button" class="button remove-stylesheet">Remove</button></td>' +
             '</tr>';
 

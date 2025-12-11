@@ -130,7 +130,10 @@ class Layer_External_Stylesheets {
                 continue;
             }
 
-            $cache_file = $this->generate_layered_css($config['handle'], $config['source']);
+            // Convert relative path to absolute
+            $source_path = $this->get_absolute_path($config['source']);
+
+            $cache_file = $this->generate_layered_css($config['handle'], $source_path);
 
             if ($cache_file && file_exists($cache_file)) {
                 $cache_filename = basename($cache_file);
@@ -145,6 +148,31 @@ class Layer_External_Stylesheets {
                 );
             }
         }
+    }
+
+    /**
+     * Convert relative path to absolute path
+     */
+    private function get_absolute_path($path) {
+        // If already absolute, return as is
+        if (file_exists($path)) {
+            return $path;
+        }
+
+        // Try WP_CONTENT_DIR first (most common)
+        $content_path = WP_CONTENT_DIR . '/' . ltrim($path, '/');
+        if (file_exists($content_path)) {
+            return $content_path;
+        }
+
+        // Try ABSPATH
+        $abs_path = ABSPATH . ltrim($path, '/');
+        if (file_exists($abs_path)) {
+            return $abs_path;
+        }
+
+        // Return original if not found
+        return $path;
     }
 
     /**
@@ -242,36 +270,40 @@ class Layer_External_Stylesheets {
         }
 
         $registered_styles = array();
+        $wp_content_url = content_url();
 
         foreach ($wp_styles->registered as $handle => $style) {
             // Get the source URL
             $src = $style->src;
 
-            // Try to convert URL to file path
-            $src_path = '';
-            if (!empty($src)) {
-                // Handle relative URLs
-                if (strpos($src, '//') === false) {
-                    $src = site_url($src);
-                }
-
-                // Try to convert URL to file path
-                $site_url = site_url();
-                $wp_content_url = content_url();
-
-                if (strpos($src, $wp_content_url) === 0) {
-                    $src_path = WP_CONTENT_DIR . str_replace($wp_content_url, '', strtok($src, '?'));
-                } else if (strpos($src, $site_url) === 0) {
-                    $src_path = ABSPATH . str_replace($site_url, '', strtok($src, '?'));
-                }
+            // Skip if no source
+            if (empty($src)) {
+                continue;
             }
 
-            $registered_styles[$handle] = array(
-                'src' => $src,
-                'src_path' => $src_path,
-                'deps' => $style->deps,
-                'ver' => $style->ver
-            );
+            // Handle relative URLs
+            if (strpos($src, '//') === false) {
+                $src = site_url($src);
+            }
+
+            // Only process URLs from wp-content
+            if (strpos($src, $wp_content_url) !== 0) {
+                continue;
+            }
+
+            // Make path relative to WP_CONTENT_DIR
+            $src_path = str_replace($wp_content_url, '', strtok($src, '?'));
+            $src_path = ltrim($src_path, '/');
+
+            // ONLY include files from plugins directory, nothing else
+            if (strpos($src_path, 'plugins/') === 0) {
+                $registered_styles[$handle] = array(
+                    'src' => $src,
+                    'src_path' => $src_path,
+                    'deps' => $style->deps,
+                    'ver' => $style->ver
+                );
+            }
         }
 
         // Only update if we have styles and it's different from cached version
